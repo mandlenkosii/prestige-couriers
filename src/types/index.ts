@@ -35,6 +35,7 @@ export interface Shipment {
     dimensions: string;
     description: string;
   };
+  commodityType?: string;
   urgency: UrgencyLevel;
   price: number;
   createdAt: string;

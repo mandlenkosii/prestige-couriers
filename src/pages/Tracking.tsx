@@ -180,6 +180,7 @@ const Tracking: React.FC = () => {
                   <span className="font-bold capitalize flex items-center gap-2">
                     {shipment.type === 'legal' ? <Shield className="w-4 h-4 text-accent" /> : <Package className="w-4 h-4 text-accent" />}
                     {shipment.type} Shipment
+                    {shipment.type === 'commodity' && shipment.commodityType && ` (${shipment.commodityType.replace('_', ' ')})`}
                   </span>
                 </div>
                 <div>

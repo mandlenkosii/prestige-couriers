@@ -9,10 +9,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { MapPin, Package, FileText, Scale, Ruler, Zap, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShipmentType, UrgencyLevel, ShipmentStatus } from '../types';
-import { formatCurrency, generateOTP, calculateShipmentPrice, RATE_PER_KM } from '../lib/utils';
+import { formatCurrency, generateOTP, calculateShipmentPrice, RATE_PER_KM, MINERAL_RATES } from '../lib/utils';
 
 const bookingSchema = z.object({
   type: z.enum(['legal', 'commodity']),
+  commodityType: z.string().optional(),
   pickupAddress: z.string().min(5, 'Pickup address is required'),
   deliveryAddress: z.string().min(5, 'Delivery address is required'),
   distance: z.number().min(1, 'Distance must be at least 1km'),
@@ -37,6 +38,7 @@ const Booking: React.FC = () => {
       type: (searchParams.get('type') as ShipmentType) || 'commodity',
       urgency: 'standard',
       distance: 5,
+      commodityType: 'other'
     }
   });
 
@@ -47,10 +49,11 @@ const Booking: React.FC = () => {
       watchedValues.distance || 0,
       watchedValues.weight || 0,
       watchedValues.type || 'commodity',
-      watchedValues.urgency || 'standard'
+      watchedValues.urgency || 'standard',
+      watchedValues.commodityType
     );
     setPrice(calculatedPrice);
-  }, [watchedValues.type, watchedValues.weight, watchedValues.urgency, watchedValues.distance]);
+  }, [watchedValues.type, watchedValues.weight, watchedValues.urgency, watchedValues.distance, watchedValues.commodityType]);
 
   const onSubmit = async (data: BookingFormValues) => {
     setLoading(true);
@@ -58,6 +61,7 @@ const Booking: React.FC = () => {
       const shipmentData = {
         customerId: user?.uid || 'guest',
         type: data.type,
+        commodityType: data.type === 'commodity' ? data.commodityType : undefined,
         status: 'pending' as ShipmentStatus,
         pickup: { address: data.pickupAddress, lat: 0, lng: 0 },
         delivery: { address: data.deliveryAddress, lat: 0, lng: 0 },
@@ -134,6 +138,32 @@ const Booking: React.FC = () => {
                   <span className="text-xs text-gray-500 text-center mt-1">Bulk goods, parcels, business logistics</span>
                 </label>
               </div>
+
+              <AnimatePresence>
+                {watchedValues.type === 'commodity' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-6 pt-6 border-t border-gray-100"
+                  >
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Mineral / Commodity Type</label>
+                    <select
+                      {...register('commodityType')}
+                      className="w-full px-4 py-3 bg-neutral-light border border-gray-200 rounded-lg focus:ring-2 focus:ring-accent outline-none capitalize"
+                    >
+                      {Object.keys(MINERAL_RATES).map((key) => (
+                        <option key={key} value={key}>
+                          {key.replace('_', ' ')} (Base: {formatCurrency(MINERAL_RATES[key])})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Different minerals have specific handling rates based on security and logistics requirements.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Step 2: Addresses */}
@@ -257,7 +287,10 @@ const Booking: React.FC = () => {
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Service Type</span>
-                  <span className="font-bold capitalize">{watchedValues.type}</span>
+                  <span className="font-bold capitalize">
+                    {watchedValues.type} 
+                    {watchedValues.type === 'commodity' && watchedValues.commodityType && ` (${watchedValues.commodityType.replace('_', ' ')})`}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Urgency</span>
