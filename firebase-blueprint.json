@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents a user in the system (Customer, Driver, or Admin).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["customer", "driver", "admin"] },
+        "phoneNumber": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "photoURL": { "type": "string" },
+        "isVerified": { "type": "boolean", "description": "For drivers/legal handlers" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Shipment": {
+      "title": "Shipment",
+      "description": "Represents a delivery request.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerId": { "type": "string", "description": "UID of the customer who booked" },
+        "driverId": { "type": "string", "description": "UID of the assigned driver" },
+        "type": { "type": "string", "enum": ["legal", "commodity"] },
+        "status": { "type": "string", "enum": ["pending", "assigned", "picked_up", "in_transit", "delivered", "cancelled"] },
+        "pickupAddress": { "type": "string" },
+        "deliveryAddress": { "type": "string" },
+        "pickupLocation": { "type": "object", "properties": { "lat": { "type": "number" }, "lng": { "type": "number" } } },
+        "deliveryLocation": { "type": "object", "properties": { "lat": { "type": "number" }, "lng": { "type": "number" } } },
+        "packageDetails": {
+          "type": "object",
+          "properties": {
+            "weight": { "type": "number" },
+            "dimensions": { "type": "string" },
+            "description": { "type": "string" }
+          }
+        },
+        "urgency": { "type": "string", "enum": ["standard", "priority", "express"] },
+        "price": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "legalModule": {
+          "type": "object",
+          "properties": {
+            "otp": { "type": "string" },
+            "idVerified": { "type": "boolean" },
+            "signatureURL": { "type": "string" },
+            "photoProofURL": { "type": "string" },
+            "chainOfCustody": { "type": "array", "items": { "type": "object" } }
+          }
+        }
+      },
+      "required": ["customerId", "type", "status", "pickupAddress", "deliveryAddress"]
+    },
+    "AuditLog": {
+      "title": "Audit Log",
+      "description": "Tamper-proof logs for legal shipments.",
+      "type": "object",
+      "properties": {
+        "shipmentId": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" },
+        "details": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/shipments/{shipmentId}": {
+      "schema": "Shipment",
+      "description": "All shipment records"
+    },
+    "/shipments/{shipmentId}/auditLogs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Audit logs for a specific shipment"
+    }
+  }
+}

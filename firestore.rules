@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: uid, email, displayName, role, phoneNumber, createdAt, isVerified
+    //
+    // Collection: shipments
+    // Fields: customerId, driverId, type, status, pickup, delivery, packageDetails, urgency, price, createdAt, updatedAt, legalModule
+    //
+    // Collection: shipments/{shipmentId}/auditLogs
+    // Fields: shipmentId, action, timestamp, userId, details
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (request.auth.token.email == "jjuniorsikhosana@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isDriver() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'driver';
+    }
+
+    function isShipmentCustomer(shipmentData) {
+      return isAuthenticated() && request.auth.uid == shipmentData.customerId;
+    }
+
+    function isShipmentDriver(shipmentData) {
+      return isAuthenticated() && request.auth.uid == shipmentData.driverId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
+             data.role in ['customer', 'driver', 'admin'] &&
+             data.email is string && data.email.size() < 100;
+    }
+
+    function isValidShipment(data) {
+      return data.keys().hasAll(['customerId', 'type', 'status', 'pickup', 'delivery', 'price']) &&
+             data.type in ['legal', 'commodity'] &&
+             data.status in ['pending', 'assigned', 'picked_up', 'in_transit', 'delivered', 'cancelled'] &&
+             data.price is number && data.price >= 0;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role != 'admin';
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data) && 
+                    (isAdmin() || request.resource.data.role == resource.data.role);
+    }
+
+    match /shipments/{shipmentId} {
+      // Public tracking view (limited fields)
+      allow get: if true; 
+      
+      allow list: if isAuthenticated() && (
+        isAdmin() || 
+        request.query.limit <= 50 // Basic protection for list queries
+      );
+
+      allow create: if isAuthenticated() && isValidShipment(request.resource.data) && 
+                    request.resource.data.customerId == request.auth.uid;
+
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        (isShipmentCustomer(resource.data) && request.resource.data.status == 'cancelled' && resource.data.status == 'pending') ||
+        (isShipmentDriver(resource.data) && isValidShipment(request.resource.data))
+      );
+
+      match /auditLogs/{logId} {
+        allow read: if isAuthenticated() && (isAdmin() || isShipmentCustomer(get(/databases/$(database)/documents/shipments/$(shipmentId)).data) || isShipmentDriver(get(/databases/$(database)/documents/shipments/$(shipmentId)).data));
+        allow create: if isAuthenticated() && (isAdmin() || isShipmentDriver(get(/databases/$(database)/documents/shipments/$(shipmentId)).data));
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "Prestige Couriers",
+  "description": "Premium logistics PWA for legal and commodity transportation.",
+  "requestFramePermissions": ["camera", "geolocation"]
+}
