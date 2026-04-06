@@ -26,40 +26,44 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="bg-primary text-white sticky top-0 z-50 shadow-md">
+      <nav className="bg-primary/80 backdrop-blur-xl text-white sticky top-0 z-50 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
-                <Package className="text-primary w-6 h-6" />
+          <div className="flex justify-between h-20 items-center">
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="w-12 h-12 border border-accent/30 rounded-full flex items-center justify-center group-hover:border-accent transition-all duration-500">
+                <Package className="text-accent w-6 h-6" />
               </div>
-              <span className="text-xl font-bold tracking-tight">PRESTIGE <span className="text-accent">COURIERS</span></span>
+              <div className="flex flex-col">
+                <span className="text-lg font-serif font-bold tracking-[0.2em] leading-none">PRESTIGE</span>
+                <span className="text-[10px] font-sans font-bold tracking-[0.4em] text-accent mt-1">COURIERS</span>
+              </div>
             </Link>
 
             {/* Desktop Nav */}
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden md:flex items-center space-x-10">
               {navItems.filter(item => item.show).map(item => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-1 hover:text-accent transition-colors ${location.pathname === item.path ? 'text-accent' : ''}`}
+                  className={`micro-label hover:text-accent transition-all duration-300 ${location.pathname === item.path ? 'text-accent' : ''}`}
                 >
-                  <item.icon className="w-4 h-4" />
                   <span>{item.name}</span>
                 </Link>
               ))}
               {user ? (
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2 border-l border-white/20 pl-4">
-                    <User className="w-4 h-4 text-accent" />
-                    <span className="text-sm font-medium">{profile?.displayName}</span>
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-3 border-l border-white/10 pl-6">
+                    <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center border border-accent/20">
+                      <User className="w-4 h-4 text-accent" />
+                    </div>
+                    <span className="text-xs font-bold tracking-wider">{profile?.displayName}</span>
                   </div>
-                  <button onClick={handleLogout} className="text-white/70 hover:text-white">
+                  <button onClick={handleLogout} className="text-white/40 hover:text-white transition-colors">
                     <LogOut className="w-5 h-5" />
                   </button>
                 </div>
               ) : (
-                <Link to="/login" className="btn-accent py-2 px-4 text-sm">Login</Link>
+                <Link to="/login" className="btn-accent py-2.5 px-6">Login</Link>
               )}
             </div>
 
