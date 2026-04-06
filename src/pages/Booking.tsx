@@ -53,11 +53,10 @@ const Booking: React.FC = () => {
   }, [watchedValues.type, watchedValues.weight, watchedValues.urgency, watchedValues.distance]);
 
   const onSubmit = async (data: BookingFormValues) => {
-    if (!user) return;
     setLoading(true);
     try {
       const shipmentData = {
-        customerId: user.uid,
+        customerId: user?.uid || 'guest',
         type: data.type,
         status: 'pending' as ShipmentStatus,
         pickup: { address: data.pickupAddress, lat: 0, lng: 0 },
@@ -93,7 +92,7 @@ const Booking: React.FC = () => {
           shipmentId: docRef.id,
           action: 'BOOKED',
           timestamp: new Date().toISOString(),
-          userId: user.uid,
+          userId: user?.uid || 'guest',
           details: 'Legal shipment created with secure tracking enabled.'
         });
       }

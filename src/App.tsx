@@ -25,11 +25,12 @@ export default function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/track" element={<Tracking />} />
             <Route path="/track/:id" element={<Tracking />} />
+            <Route path="/book" element={<Booking />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/book" element={<Booking />} />
+              {/* Add any strictly protected routes here if needed */}
             </Route>
 
             {/* Role Specific Routes */}

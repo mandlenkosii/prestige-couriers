@@ -18,9 +18,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const navItems = [
     { name: 'Home', path: '/', icon: Package, show: true },
-    { name: 'Book Courier', path: '/book', icon: MapPin, show: !!user },
+    { name: 'Book Courier', path: '/book', icon: MapPin, show: true },
     { name: 'Track', path: '/track', icon: MapPin, show: true },
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, show: !!user },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, show: true },
     { name: 'Admin', path: '/admin', icon: ShieldCheck, show: isAdmin },
   ];
 

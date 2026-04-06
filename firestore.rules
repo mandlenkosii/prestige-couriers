@@ -80,8 +80,11 @@ service cloud.firestore {
         request.query.limit <= 50 // Basic protection for list queries
       );
 
-      allow create: if isAuthenticated() && isValidShipment(request.resource.data) && 
-                    request.resource.data.customerId == request.auth.uid;
+      // Allow guest bookings (customerId == 'guest') or authenticated bookings
+      allow create: if (
+        (request.resource.data.customerId == 'guest' && !isAuthenticated()) ||
+        (isAuthenticated() && request.resource.data.customerId == request.auth.uid)
+      ) && isValidShipment(request.resource.data);
 
       allow update: if isAuthenticated() && (
         isAdmin() || 
@@ -90,8 +93,11 @@ service cloud.firestore {
       );
 
       match /auditLogs/{logId} {
-        allow read: if isAuthenticated() && (isAdmin() || isShipmentCustomer(get(/databases/$(database)/documents/shipments/$(shipmentId)).data) || isShipmentDriver(get(/databases/$(database)/documents/shipments/$(shipmentId)).data));
-        allow create: if isAuthenticated() && (isAdmin() || isShipmentDriver(get(/databases/$(database)/documents/shipments/$(shipmentId)).data));
+        allow read: if true; // Allow anyone to see the audit trail for a shipment they can track
+        allow create: if (
+          (get(/databases/$(database)/documents/shipments/$(shipmentId)).data.customerId == 'guest') ||
+          (isAuthenticated() && (isAdmin() || isShipmentDriver(get(/databases/$(database)/documents/shipments/$(shipmentId)).data)))
+        );
       }
     }
   }
